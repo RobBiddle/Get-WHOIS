@@ -118,13 +118,13 @@ function Get-WHOIS {
             $whoisResponse = $whoisResponse -replace "`r`n`r`n", "`r`n"
             # Split whoisResponse into lines and parse the WHOIS response for the basic information
             $whoisResponse = $whoisResponse -split "`r`n"
-            $Registrar = $whoisResponse | Select-String -Pattern "Registrar: " | Select-Object -First 1 | Select-Object -Last 1
+            $Registrar = $whoisResponse | Select-String -Pattern "Registrar: " | Select-Object -First 1
             $Registrar = $registrar -replace "Registrar:", ""
             $Registrar = $registrar -replace "[\s-[\r\n]]+", ""
-            $CreationDate = $whoisResponse | Select-String -Pattern "Creation Date: " | Select-Object -First 1 | Select-Object -Last 1
+            $CreationDate = $whoisResponse | Select-String -Pattern "Creation Date: " | Select-Object -First 1
             $CreationDate = $CreationDate -replace "Creation Date:", ""
             $CreationDate = Get-Date $CreationDate
-            $ExpirationDate = $whoisResponse | Select-String -Pattern "Registry Expiry Date: " | Select-Object -First 1 | Select-Object -Last 1
+            $ExpirationDate = $whoisResponse | Select-String -Pattern "Registry Expiry Date: " | Select-Object -First 1
             $ExpirationDate = $ExpirationDate -replace "Registry Expiry Date:", ""
             $ExpirationDate = Get-Date $ExpirationDate
             $DaysUntilExpiration = (New-TimeSpan -Start (Get-Date) -End (Get-Date $ExpirationDate)).Days
