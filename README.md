@@ -43,6 +43,7 @@ Get-WHOIS -DomainName "whois-servers.net"
 
 This will return the following information:
 
+```yaml
 DomainName          : whois-servers.net
 CreationDate        : 1999-03-31 12:00:00 AM
 DaysUntilExpiration : 162
@@ -50,6 +51,7 @@ ExpirationDate      : 2024-03-31 12:00:00 AM
 NameServers         : {UDNS1.ULTRADNS.NET, UDNS2.ULTRADNS.NET}
 Registrar           : TucowsDomainsInc.
 WhoisServerName     : whois.verisign-grs.com
+```
 
 ### EXAMPLE 2
 
