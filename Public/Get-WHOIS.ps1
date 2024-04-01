@@ -123,11 +123,11 @@ function Get-WHOIS {
             $Registrar = $registrar -replace "[\s-[\r\n]]+", ""
             $CreationDate = $whoisResponse | Select-String -Pattern "Creation Date: " | Select-Object -First 1
             $CreationDate = $CreationDate -replace "Creation Date:", ""
-            $CreationDate = Get-Date $CreationDate
+            $CreationDate = $(if($CreationDate) {Get-Date $CreationDate})
             $ExpirationDate = $whoisResponse | Select-String -Pattern "Registry Expiry Date: " | Select-Object -First 1
             $ExpirationDate = $ExpirationDate -replace "Registry Expiry Date:", ""
-            $ExpirationDate = Get-Date $ExpirationDate
-            $DaysUntilExpiration = (New-TimeSpan -Start (Get-Date) -End (Get-Date $ExpirationDate)).Days
+            $ExpirationDate = $(if($ExpirationDate) {Get-Date $ExpirationDate})
+            $DaysUntilExpiration = $(if($ExpirationDate) {(New-TimeSpan -Start (Get-Date) -End (Get-Date $ExpirationDate)).Days})
             $NameServers = $whoisResponse | Select-String -Pattern "Name Server: " | Select-Object -Unique
             $NameServers = $NameServers -replace "Name Server:", ""
             $NameServers = $NameServers -replace "[\s-[\r\n]]+", ""
