@@ -114,35 +114,103 @@ function Get-WHOIS {
         $whoisWriter.Close()
         $whoisSocket.Close()
         if ($OutputFormat -eq "summary") {
-            # Remove blank lines
-            $whoisResponse = $whoisResponse -replace "`r`n`r`n", "`r`n"
-            # Split whoisResponse into lines and parse the WHOIS response for the basic information
-            $whoisResponse = $whoisResponse -split "`r`n"
-            $Registrar = $whoisResponse | Select-String -Pattern "Registrar: " | Select-Object -First 1
-            $Registrar = $registrar -replace "Registrar:", ""
-            $Registrar = $registrar -replace "[\s-[\r\n]]+", ""
-            $CreationDate = $whoisResponse | Select-String -Pattern "Creation Date: " | Select-Object -First 1
-            $CreationDate = $CreationDate -replace "Creation Date:", ""
-            $CreationDate = $(if($CreationDate) {Get-Date $CreationDate})
-            $ExpirationDate = $whoisResponse | Select-String -Pattern "Registry Expiry Date: " | Select-Object -First 1
-            $ExpirationDate = $ExpirationDate -replace "Registry Expiry Date:", ""
-            $ExpirationDate = $(if($ExpirationDate) {Get-Date $ExpirationDate})
-            $DaysUntilExpiration = $(if($ExpirationDate) {(New-TimeSpan -Start (Get-Date) -End (Get-Date $ExpirationDate)).Days})
-            $NameServers = $whoisResponse | Select-String -Pattern "Name Server: " | Select-Object -Unique
-            $NameServers = $NameServers -replace "Name Server:", ""
-            $NameServers = $NameServers -replace "[\s-[\r\n]]+", ""
-            $whoisSummary = @{
-                DomainName          = $DomainName
-                Registrar           = $Registrar
-                CreationDate        = $CreationDate
-                DaysUntilExpiration = $DaysUntilExpiration
-                ExpirationDate      = $ExpirationDate
-                NameServers         = @($NameServers)
-                WhoisServerName     = $wServerName
+            $parsedResponse = $whoisResponse -split "\r?\n" | Where-Object { $_ -match ":" }
+            $properties = @{}
+            
+            foreach ($line in $parsedResponse) {
+                if ($line -match '^(.*?):\s*(.*)') {
+                    $name = $matches[1].Trim()
+                    $value = $matches[2].Trim()
+            
+                    # Remove special characters from the property name, except for spaces
+                    # $name = $name -replace '[^a-zA-Z0-9\s]', ''
+            
+                    # Remove special characters from the property name, including spaces
+                    $name = $name -replace '[^a-zA-Z0-9]', ''
+            
+                    # Remove leading and trailing spaces
+                    $name = $name.Trim()
+            
+                    $matchFound = $false
+                    $DesiredPropertyNames = @("Created", "Creation", "Updated", "Expiration", "Expires", "Expiry", "Date", "Email", "Server", "Status", "Registrant", "Registrar", "Registry", "Domain", "IANA")
+                    foreach ($DesiredPropertyName in $DesiredPropertyNames) {
+                        if ($name -imatch $DesiredPropertyName) {
+                            $matchFound = $true
+                        }
+                    }
+            
+                    if (-not $matchFound) {
+                        continue
+                    }
+            
+                    $IgnoredStringFound = $false
+                    $IgnoredNameStrings = @("NOTICE", "TERMS OF USE", "https")
+                    foreach ($IgnoredString in $IgnoredNameStrings) {
+                        if ($name -imatch $IgnoredString) {
+                            # Write-Verbose "The line contains the ignored string: $IgnoredString"
+                            $IgnoredStringFound = $true
+                        }
+                    }
+            
+                    if ($IgnoredStringFound) {
+                        continue
+                    }
+            
+                    if ($properties.ContainsKey($name)) {
+                        if ($properties[$name] -isnot [array]) {
+                            $properties[$name] = @($properties[$name])
+                        }
+                        $properties[$name] += $value
+                    }
+                    else {
+                        $properties[$name] = $value
+                    }
+                }
+            }
+            
+            # Calculate Days Until Expiration
+            # Define a list of possible property names for expiration dates
+            $expirationPropertyNames = @("ExpirationDate", "ExpiryDate", "Expires", "RegistryExpiryDate")
+            
+            # Initialize variable to store the days until expiration
+            $DaysUntilExpiration = $null
+            
+            # Loop through each property name to find the first one that exists and calculate the days until expiration
+            foreach ($propertyName in $expirationPropertyNames) {
+                if ($properties[$propertyName]) {
+                    $DaysUntilExpiration = (New-TimeSpan -Start (Get-Date) -End $properties[$propertyName]).Days
+                    $properties["DaysUntilExpiration"] = $DaysUntilExpiration
+                    break # Exit the loop once the first valid expiration date is found and processed
+                }
             }
 
-            # Return the basic information
-            New-Object -TypeName PSCustomObject -Property $whoisSummary | Select-Object DomainName, CreationDate, DaysUntilExpiration, ExpirationDate, NameServers, Registrar, WhoisServerName
+            # Add the WHOIS server name to the properties
+            $properties["WhoisServerName"] = $wServerName
+
+            # Create a new ordered dictionary to hold sorted properties
+            $sortedProperties = [ordered]@{}
+            
+            # Sort the properties and add them to the sorted ordered dictionary
+            $properties.GetEnumerator() | Sort-Object Name | ForEach-Object {
+                $sortedProperties[$_.Key] = $_.Value
+            }
+            
+            # Convert the sorted ordered dictionary directly to a PSCustomObject
+            $whoisObject = [PSCustomObject]$sortedProperties
+
+            # Add alias property for NameServers
+            # This is being done to avoid creating a breaking change
+            if ($whoisObject.NameServer -and (-not $whoisObject.NameServers)) {
+                $whoisObject | Add-Member -MemberType AliasProperty -Name NameServers -Value NameServer -Force
+            }
+
+            # Add property for WhoisLookupServiceUsed
+            if ($whoisDnsServers.FoundVia) {
+                $whoisObject | Add-Member -MemberType NoteProperty -Name WhoisLookupService -Value ($whoisDnsServers.FoundVia | Select-Object -Unique) -Force
+            }
+
+            # Output the object
+            $whoisObject
         }
         else {
             $whoisResponse

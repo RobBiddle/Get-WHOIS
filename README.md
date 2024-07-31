@@ -38,19 +38,30 @@ The WHOIS server is determined by the TLD of the domain name, unless specified.
 ### EXAMPLE 1
 
 ```powershell
-Get-WHOIS -DomainName "whois-servers.net"
+Get-WHOIS -DomainName whois-servers.net
 ```
 
 This will return the following information:
 
 ```yaml
-DomainName          : whois-servers.net
-CreationDate        : 1999-03-31 12:00:00 AM
-DaysUntilExpiration : 162
-ExpirationDate      : 2024-03-31 12:00:00 AM
-NameServers         : {UDNS1.ULTRADNS.NET, UDNS2.ULTRADNS.NET}
-Registrar           : TucowsDomainsInc.
-WhoisServerName     : whois.verisign-grs.com
+CreationDate               : 1999-03-31T05:00:00Z
+DaysUntilExpiration        : 243
+DomainName                 : WHOIS-SERVERS.NET
+DomainStatus               : {clientDeleteProhibited https://icann.org/epp#clientDeleteProhibited, clientTransferProhibited
+                             https://icann.org/epp#clientTransferProhibited, clientUpdateProhibited
+                             https://icann.org/epp#clientUpdateProhibited}
+Lastupdateofwhoisdatabase  : 2024-07-30T23:28:21Z <<<
+NameServer                 : {UDNS1.ULTRADNS.NET, UDNS2.ULTRADNS.NET}
+Registrar                  : Tucows Domains Inc.
+RegistrarAbuseContactEmail : domainabuse@tucows.com
+RegistrarAbuseContactPhone : +1.4165350123
+RegistrarIANAID            : 69
+RegistrarURL               : http://www.tucows.com
+RegistrarWHOISServer       : whois.tucows.com
+RegistryDomainID           : 4846261_DOMAIN_NET-VRSN
+RegistryExpiryDate         : 2025-03-31T04:00:00Z
+UpdatedDate                : 2024-03-02T05:01:56Z
+WhoisServerName            : whois.verisign-grs.com
 ```
 
 ### EXAMPLE 2

@@ -1,9 +1,11 @@
 
 <#
 .SYNOPSIS
-    Queries DNS for the WHOIS server for a domain name.
+    Finds the WHOIS server for a domain name.
 .DESCRIPTION
-    Function to lookup the WHOIS server for a domain name by querying the WHOIS DNS server for the TLD of the domain name.
+    Function to lookup the WHOIS server for a domain name.
+    Initially this will attempt to resolve the WHOIS server for the TLD using whois-servers.net.
+    If that fails, it will attempt to find the WHOIS server for the TLD using the IANA WHOIS Service.
 .NOTES
     Author: Robert D. Biddle
     Date: 2023-10-18
@@ -57,6 +59,54 @@ function Find-WhoisServer {
     )
 
     $tld = $DomainName.Split(".")[-1]
-    $whoisDnsServersForTld = Resolve-DnsName "$tld.whois-servers.net" | Select-Object -Property *
-    $whoisDnsServersForTld | Where-Object IPAddress
+    Write-Verbose "TLD: $tld"
+
+    # Attempt to resolve the WHOIS server for the TLD using whois-servers.net
+    # whois-servers.net is a service that provides WHOIS server information via DNS
+    try {
+        Write-Verbose "Attempting to resolve WHOIS server for TLD $tld via DNS using whois-servers.net."
+        $whoisDnsServers = Resolve-DnsName "$tld.whois-servers.net" -ErrorAction Stop
+        $whoisDnsServers | Add-Member -MemberType NoteProperty -Name FoundVia -Value "whois-servers.net" -PassThru
+        $whoisDnsServers = $whoisDnsServers | Select-Object -Property * | Where-Object IP4Address
+    }
+    catch {
+        Write-Verbose "Failed to resolve WHOIS server for TLD $tld using whois-servers.net."
+    }
+
+    # Attempt to find the WHOIS server for the TLD using the IANA WHOIS Service
+    # The IANA WHOIS Service is provided using the WHOIS protocol on port 43
+    # https://www.iana.org/help/whois
+    # Data is returned in a colon delimited "key: value" format. Comment lines begin with a "%" symbol. Text is encoded using UTF-8.
+    # The URL to query will look like this: https://www.iana.org/whois?q=$tld
+    if (-not $whoisDnsServers) {
+        try {
+            Write-Verbose "Attempting to find WHOIS server for TLD $tld via WHOIS protocol using IANA WHOIS Service."
+            # Fetch the raw HTML content
+            $ianaResponse = Invoke-WebRequest -Uri "https://www.iana.org/whois?q=$tld" -ErrorAction Stop
+            $rawHtmlContent = $ianaResponse.Content
+            
+            # Convert HTML content to string
+            $htmlAsString = $rawHtmlContent.ToString()
+    
+            # Use regex to find the WHOIS server URL in the HTML content
+            $whoisServerRegex = 'whois:\s*(?<WhoisServer>[^\s]+)'
+            if ($htmlAsString -match $whoisServerRegex) {
+                $whoisDnsServersForTld = $matches['WhoisServer']
+                Write-Verbose "Found WHOIS Server: $whoisDnsServersForTld"
+            } else {
+                Write-Verbose "Failed to find WHOIS server for TLD $tld using IANA WHOIS Service."
+            }
+    
+            $whoisDnsServers = Resolve-DnsName $whoisDnsServersForTld -ErrorAction Stop
+            $whoisDnsServers | Add-Member -MemberType NoteProperty -Name FoundVia -Value "IANA WHOIS Service" -PassThru
+            $whoisDnsServers | Select-Object -Property * | Where-Object IP4Address
+        }
+        catch {
+            Write-Verbose "Failed to find WHOIS server for TLD $tld using IANA WHOIS Service."
+        }
+        
+        if (-not $whoisDnsServers) {
+            Write-Error "Failed to find WHOIS server for TLD $tld."
+        }
+    }
 }
