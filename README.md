@@ -99,10 +99,14 @@ Valid values are "summary" and "detail".
 "summary" is the default value and returns a PSCustomObject.
 The properties returned will vary based on the WHOIS results returned.
 Most results will at least return:
-CreationDate
-DaysUntilExpiration (a calculated value returned as an integer)
-DomainName
-Registrar
+CreationDate,
+DaysUntilExpiration (a calculated value returned as an integer),
+DomainName,
+NameServer,
+NameServers (alias property of NameServer for backwards compatibility)
+Registrar,
+UpdatedDate
+WhoisLookupService
 WhoisServerName
 
 For reference, here are the properties returned by [Example 1](https://github.com/RobBiddle/Get-WHOIS/tree/main?tab=readme-ov-file#example-1):
