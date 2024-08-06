@@ -45,12 +45,11 @@ This will return the following information:
 
 ```yaml
 CreationDate               : 1999-03-31T05:00:00Z
-DaysUntilExpiration        : 243
+DaysUntilExpiration        : 236
 DomainName                 : WHOIS-SERVERS.NET
-DomainStatus               : {clientDeleteProhibited https://icann.org/epp#clientDeleteProhibited, clientTransferProhibited
-                             https://icann.org/epp#clientTransferProhibited, clientUpdateProhibited
-                             https://icann.org/epp#clientUpdateProhibited}
-Lastupdateofwhoisdatabase  : 2024-07-30T23:28:21Z <<<
+DomainStatus               : {clientDeleteProhibited https://icann.org/epp#clientDeleteProhibited, clientTransferProhibited https://icann.org/epp#clientTransferProhibited,
+                             clientUpdateProhibited https://icann.org/epp#clientUpdateProhibited}
+Lastupdateofwhoisdatabase  : 2024-08-06T15:36:03Z <<<
 NameServer                 : {UDNS1.ULTRADNS.NET, UDNS2.ULTRADNS.NET}
 Registrar                  : Tucows Domains Inc.
 RegistrarAbuseContactEmail : domainabuse@tucows.com
@@ -62,6 +61,8 @@ RegistryDomainID           : 4846261_DOMAIN_NET-VRSN
 RegistryExpiryDate         : 2025-03-31T04:00:00Z
 UpdatedDate                : 2024-03-02T05:01:56Z
 WhoisServerName            : whois.verisign-grs.com
+NameServers                : {UDNS1.ULTRADNS.NET, UDNS2.ULTRADNS.NET}
+WhoisLookupService         : whois-servers.net
 ```
 
 ### EXAMPLE 2
@@ -95,8 +96,45 @@ Accept wildcard characters: False
 The output format for the WHOIS information.
 Valid values are "summary" and "detail".
 
-"summary" is the default value and returns a PSCustomObject with Properties:
-DomainName, CreationDate, DaysUntilExpiration, ExpirationDate, NameServers, Registrar, WhoisServerName
+"summary" is the default value and returns a PSCustomObject.
+The properties returned will vary based on the WHOIS results returned.
+Most results will at least return:
+CreationDate
+DaysUntilExpiration (a calculated value returned as an integer)
+DomainName
+Registrar
+WhoisServerName
+
+For reference, here are the properties returned by example 1:
+
+```powershell
+   TypeName: System.Management.Automation.PSCustomObject
+
+Name                       MemberType    Definition
+----                       ----------    ----------
+NameServers                AliasProperty NameServers = NameServer
+Equals                     Method        bool Equals(System.Object obj)
+GetHashCode                Method        int GetHashCode()
+GetType                    Method        type GetType()
+ToString                   Method        string ToString()
+CreationDate               NoteProperty  string CreationDate=1999-03-31T05:00:00Z
+DaysUntilExpiration        NoteProperty  int DaysUntilExpiration=236
+DomainName                 NoteProperty  string DomainName=WHOIS-SERVERS.NET
+DomainStatus               NoteProperty  Object[] DomainStatus=System.Object[]
+Lastupdateofwhoisdatabase  NoteProperty  string Lastupdateofwhoisdatabase=2024-08-06T15:36:03Z <<<
+NameServer                 NoteProperty  Object[] NameServer=System.Object[]
+Registrar                  NoteProperty  string Registrar=Tucows Domains Inc.
+RegistrarAbuseContactEmail NoteProperty  string RegistrarAbuseContactEmail=domainabuse@tucows.com
+RegistrarAbuseContactPhone NoteProperty  string RegistrarAbuseContactPhone=+1.4165350123
+RegistrarIANAID            NoteProperty  string RegistrarIANAID=69
+RegistrarURL               NoteProperty  string RegistrarURL=http://www.tucows.com
+RegistrarWHOISServer       NoteProperty  string RegistrarWHOISServer=whois.tucows.com
+RegistryDomainID           NoteProperty  string RegistryDomainID=4846261_DOMAIN_NET-VRSN
+RegistryExpiryDate         NoteProperty  string RegistryExpiryDate=2025-03-31T04:00:00Z
+UpdatedDate                NoteProperty  string UpdatedDate=2024-03-02T05:01:56Z
+WhoisLookupService         NoteProperty  System.String WhoisLookupService=whois-servers.net
+WhoisServerName            NoteProperty  string WhoisServerName=whois.verisign-grs.com
+```
 
 "detail" returns the full WHOIS response.
 
