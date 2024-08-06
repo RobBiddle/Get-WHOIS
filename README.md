@@ -105,7 +105,7 @@ DomainName
 Registrar
 WhoisServerName
 
-For reference, here are the properties returned by example 1:
+For reference, here are the properties returned by [Example 1](https://github.com/RobBiddle/Get-WHOIS/tree/main?tab=readme-ov-file#example-1):
 
 ```powershell
    TypeName: System.Management.Automation.PSCustomObject
