@@ -19,6 +19,7 @@ Install-Module -Name Get-WHOIS
 ## SYNOPSIS
 
 Gets WHOIS information for a domain name by querying the WHOIS server for the domain name.
+If you'd prefer to use RDAP, you can use the `Get-RDAP` cmdlet from the `Get-RDAP` module here: <https://github.com/RobBiddle/Get-RDAP>
 
 ## SYNTAX
 
