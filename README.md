@@ -10,6 +10,7 @@ schema: 2.0.0
 
 ### PowerShell Gallery
 
+![PowerShell Gallery Downloads](https://img.shields.io/powershellgallery/dt/Get-WHOIS)
 <https://www.powershellgallery.com/packages/Get-WHOIS/>
 
 ```powershell
